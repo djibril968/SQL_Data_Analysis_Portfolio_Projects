@@ -37,7 +37,8 @@ ORDER BY 2
 ---attrition rate across departments
 
 SELECT dept, AVG(CAST(time_spend_company AS INT)) AS avg_time_spent
-			,ROUND(SUM(CAST(time_spend_company AS INT)) *100/(SELECT SUM(CAST(time_spend_company AS INT)) FROM Emp_Att),2) AS att_rate
+			,ROUND(SUM(CAST(time_spend_company AS INT)) 
+			*100/(SELECT SUM(CAST(time_spend_company AS INT)) FROM Emp_Att),2) AS att_rate
 FROM Emp_Att
 GROUP BY dept
 
@@ -180,7 +181,12 @@ FROM Emp_Att
 GROUP BY number_project
 ORDER BY 2 DESC
 
----correlation betwwen number of projects and monthly hours worked
+
+
+
+	
+---correlation between number of projects and monthly hours worked
+
 DECLARE @N INT, @SumX FLOAT, @SumY FLOAT, @SumXY FLOAT, @SumXSquare FLOAT, @SumYSquare FLOAT;
 SELECT 
     @N = COUNT(*),
@@ -192,8 +198,13 @@ SELECT
 FROM Emp_Att;
 
 SELECT 
-    (@N * @SumXY - @SumX * @SumY) / SQRT((@N * @SumXSquare - POWER(@SumX, 2)) * (@N * @SumYSquare - POWER(@SumY, 2))) AS CorrelationCoefficient
+    (@N * @SumXY - @SumX * @SumY) / SQRT((@N * @SumXSquare - POWER(@SumX, 2)) * (@N * @SumYSquare - POWER(@SumY, 2))) 
+	AS CorrelationCoefficient
 FROM Emp_Att;
+
+
+
+
 
 
 /*How long do employees typically spend in the company?
@@ -215,8 +226,11 @@ SELECT
 FROM Emp_Att;
 
 SELECT 
-    (@N * @SumXY - @SumX * @SumY) / SQRT((@N * @SumXSquare - POWER(@SumX, 2)) * (@N * @SumYSquare - POWER(@SumY, 2))) AS CorrelationCoefficient
+    (@N * @SumXY - @SumX * @SumY) / SQRT((@N * @SumXSquare - POWER(@SumX, 2)) * (@N * @SumYSquare - POWER(@SumY, 2))) 
+	AS Correlation_Coefficient
 FROM Emp_Att;
+
+
 
 --time spent across departments
 SELECT dept, AVG(CAST(time_spend_company AS INT)) AS avg_time_spent
