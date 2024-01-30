@@ -135,11 +135,43 @@ FROM orders_autumn_2020
 		ORDER BY delivery_date, delivery_hour
 
 ----delivery accuracy rate across days and weather conditions
+WITH ontime_del
+AS
+(
+		SELECT delivery_date, delivery_hour, COUNT(*) AS delivery_count, 
+			(COUNT(*) * 100.0/(SELECT COUNT(*) FROM orders_autumn_2020 a
+								WHERE a.delivery_date = orders_autumn_2020.Delivery_date  
+								GROUP BY Delivery_date))AS ontime_rate,		
+			AVG(cloud_coverage) AS cloud_cov, 
+			AVG(temperature) AS temp
+			,AVG(wind_speed) AS wind_speed
+			,AVG(precipitation) AS precipitation
+		FROM orders_autumn_2020
+		WHERE cloud_coverage IS NOT NULL AND del_time_diff <=0
+		GROUP BY delivery_date, delivery_hour
+), delayed_del
 
-SELECT delivery_date
-FROM 
-
-
+AS
+(		SELECT delivery_date, delivery_hour, COUNT(*) AS delivery_count, 
+			(COUNT(*) * 100.0/(SELECT COUNT(*) FROM orders_autumn_2020 a
+								WHERE a.delivery_date = orders_autumn_2020.Delivery_date  
+								GROUP BY Delivery_date))AS delay_rate,		
+			AVG(cloud_coverage) AS cloud_cov, 
+			AVG(temperature) AS temp
+			,AVG(wind_speed) AS wind_speed
+			,AVG(precipitation) AS precipitation
+		FROM orders_autumn_2020
+		WHERE cloud_coverage IS NOT NULL AND del_time_diff >0
+		GROUP BY delivery_date, delivery_hour
+)
+		SELECT od.delivery_date, od.delivery_hour, 
+				AVG(od.ontime_rate) AS ontime_del
+				,AVG(dd.delay_rate) AS delay_del
+		FROM ontime_del od
+		JOIN delayed_del dd
+		ON od.delivery_date = dd.delivery_date
+		GROUP BY od.delivery_date, od.delivery_hour
+		ORDER BY od.delivery_date, od.delivery_hour
 
 
 
