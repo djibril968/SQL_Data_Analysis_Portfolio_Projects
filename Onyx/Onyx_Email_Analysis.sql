@@ -138,8 +138,20 @@ SELECT Msg_year
 FROM Onyx_Data_Email_Fact_table
 GROUP BY Msg_year
 
+SELECT Msg_month
+FROM Onyx_Data_Email_Fact_table
+GROUP BY Msg_month
 
+ALTER TABLE Onyx_Data_Email_Fact_table
+ADD Msg_day VARCHAR (10)
 
+UPDATE Onyx_Data_Email_Fact_table
+SET Msg_day = DAY(Msg_date)
+
+SELECT Msg_day, COUNT(Msg_day)
+FROM Onyx_Data_Email_Fact_table
+GROUP BY Msg_day
+ORDER BY 2 DESC
 
 
 
