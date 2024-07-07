@@ -153,8 +153,12 @@ FROM Onyx_Data_Email_Fact_table
 GROUP BY Msg_day
 ORDER BY 2 DESC
 
-
-
+SELECT s.Sender_name, r.Rec_Name,  COUNT(*) AS tot_msg
+FROM Onyx_Data_Email_Fact_table s
+JOIN Onyx_Data_Email_Fact_table r
+ON s.Sender_name = r.Sender_name
+GROUP BY s.Sender_name, r.Rec_Name
+ORDER BY 1, 3 DESC
 
 
 
