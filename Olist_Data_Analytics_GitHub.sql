@@ -5,7 +5,7 @@ go
 ----Q1 total revenue and change over the years
 create view Total_Rev as 
 select round(sum(payment_value),2) as total_rev
-from olist_order_payments;
+from olist_order_payments
 
 
 create view total_rev_by_years as
