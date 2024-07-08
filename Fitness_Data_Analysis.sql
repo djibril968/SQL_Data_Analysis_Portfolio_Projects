@@ -4,7 +4,7 @@ use Portfolio_Projects_01
 
 
 select * from fitness_data
-
+go
 
 -----4 key questions
 
