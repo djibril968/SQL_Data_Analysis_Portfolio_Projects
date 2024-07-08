@@ -1,6 +1,6 @@
 
 use Portfolio_Projects_01
-go
+
 
 
 select * from fitness_data
