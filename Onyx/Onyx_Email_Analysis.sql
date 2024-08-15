@@ -3,7 +3,7 @@ GO
 
 SELECT * FROM Onyx_Data_Email_Dim_table;
 
-SELECT * FROM Onyx_Data_Email_Fact_table
+SELECT * FROM Onyx_Data_Email_Fact
 
 --first we look thorugh our data, explore columns and clean where necessary --
 
