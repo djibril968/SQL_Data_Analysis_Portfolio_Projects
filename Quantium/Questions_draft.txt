@@ -1,0 +1,37 @@
+
+Exploratory Data Analysis
+
+Project Objective: 
+
+To analyze and identify distinct customer segments and their chip purchasing behavior.
+
+In line with our task, we shall take a deep dive into our dataset to provide answers to the following questions;
+
+
+		Total revenue and change over the years
+		
+		Total number of transactions/Chip purchase, and how does this vary by month or season?
+
+		What are the most popular product categories, and how do their sales volumes compare to each other?
+
+		What is the average order value (AOV), and how does this vary by product category?
+		
+		Total number of stores on
+		
+		How many active store, and how does this number change over time?
+		
+		Purchase frequency
+
+		Repeat customers and percentage of sales they represent
+		
+		RFM (Recency, Frequency and Monetary values)
+		
+		Chruned customer and percentage of sales they represent
+		
+		What are the top and least selling products, and how have their sales trends changed over time?
+		
+		What are the top and least grossing products, and how have their sales changed over time
+		
+		What products are mostly bought together
+		
+		What is the average amount spent by customers across customer segments
