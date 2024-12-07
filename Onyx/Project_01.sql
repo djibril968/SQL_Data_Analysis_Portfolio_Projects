@@ -16,3 +16,30 @@ SELECT MAX(yearly_income) AS max_year, MIN(yearly_income) AS min_income,
 FROM users_data
 
 
+ALTER TABLE users_data
+ADD income_cat VARCHAR (10)
+
+ALTER TABLE users_data
+ADD debt_cat VARCHAR (10),
+    credit_score_cat VARCHAR (10)
+
+UPDATE users_data
+SET yearly_income = SUBSTRING(yearly_income, 2, LEN('yearly_income')-1); 
+
+
+UPDATE users_data
+SET total_debt = SUBSTRING(total_debt, 2, LEN(total_debt)-1)
+
+UPDATE users_data
+SET income_cat = CASE 
+            WHEN yearly_income  >1 AND yearly_income <=24000 THEN 'low'
+            WHEN yearly_income >=24001 AND yearly_income <=80000 THEN 'mid'
+            WHEN yearly_income >=80001 AND yearly_income <=120000 THEN 'high_mid'
+            ELSE 'high'
+            END
+
+
+
+
+
+
