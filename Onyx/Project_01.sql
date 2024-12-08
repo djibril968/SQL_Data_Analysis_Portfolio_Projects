@@ -78,6 +78,16 @@ ALTER TABLE users_data
 ADD age_cat VARCHAR (10)
 
 ALTER TABLE users_data
+ALTER COLUMN retirement_age INT
+
+ALTER TABLE users_data
+ADD time_to_retire INT
+
+
+ALTER TABLE users_data
+ADD lifestage VARCHAR (20)
+
+ALTER TABLE users_data
 ALTER COLUMN age_cat VARCHAR (20)
 
 UPDATE users_data
@@ -107,16 +117,32 @@ SELECT MIN(dti), MAX(dti)
 FROM users_data
 
 
-SELECT * FROM users_data
 
 UPDATE cards_data
 SET credit_limit = SUBSTRING(credit_limit, 2, LEN(credit_limit)-1)
+
+UPDATE users_data 
+SET time_to_retire = retirement_age - current_age
+
+UPDATE users_data
+SET lifestage = CASE      
+                    WHEN time_to_retire <=0 THEN 'retired'
+                    WHEN time_to_retire >0 AND time_to_retire <10 THEN 'close_to_retire'
+                    WHEN time_to_retire >=10 AND time_to_retire <=20 THEN 'mid_career'
+                    WHEN time_to_retire >20 THEN 'early_career'
+                    END
 
 SELECT DISTINCT current_age
 FROM users_data
 ORDER BY 1 ASC
 
 SELECT min(current_age), max(current_age)
+FROM users_data
+
+SELECT min(retirement_age), max(retirement_age)
+FROM users_data
+
+SELECT min(time_to_retire), max(time_to_retire)
 FROM users_data
 --ORDER BY 1 ASC
 
@@ -127,4 +153,29 @@ SELECT gender, COUNT(id) AS gen_count
 FROM users_data
 GROUP BY gender
 
+SELECT age_cat, COUNT(id) AS age_dist
+FROM users_data
+GROUP BY age_cat
+ORDER BY 2 DESC
 
+SELECT income_cat, COUNT(id) AS cus_count
+FROM users_data
+GROUP BY income_cat
+ORDER BY 2 DESC
+
+SELECT * FROM users_data
+
+SELECT debt_cat, COUNT(id) AS cus_count
+FROM users_data
+GROUP BY debt_cat
+ORDER BY 2 DESC
+
+SELECT credit_score_cat, COUNT(id) AS cus_count
+FROM users_data
+GROUP BY credit_score_cat
+ORDER BY 2 DESC
+
+SELECT lifestage, COUNT(id) AS cus_count
+FROM users_data
+GROUP BY lifestage
+ORDER BY 2 DESC
