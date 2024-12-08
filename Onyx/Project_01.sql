@@ -116,11 +116,6 @@ ALTER COLUMN current_age INT
 SELECT MIN(dti), MAX(dti)
 FROM users_data
 
-
-
-UPDATE cards_data
-SET credit_limit = SUBSTRING(credit_limit, 2, LEN(credit_limit)-1)
-
 UPDATE users_data 
 SET time_to_retire = retirement_age - current_age
 
@@ -144,6 +139,40 @@ FROM users_data
 
 SELECT min(time_to_retire), max(time_to_retire)
 FROM users_data
+
+
+--CARDS TABLE
+
+UPDATE cards_data
+SET credit_limit = SUBSTRING(credit_limit, 2, LEN(credit_limit)-1)
+
+SELECT * FROM  cards_data
+
+ALTER TABLE cards_data
+ADD exp_month VARCHAR (20),
+    exp_year INT,
+    acc_open_month VARCHAR (20),
+    acc_open_year INT
+
+    UPDATE cards_data
+    SET exp_month = LEFT(expires, 3),
+        exp_year = RIGHT(expires, 2),
+        acc_open_month = LEFT(acct_open_date, 3),
+        acc_open_year = RIGHT(acct_open_date, 2)
+
+
+UPDATE cards_data 
+SET exp_year = CASE 
+                    WHEN exp_year <30 THEN exp_year + 2000
+                    ELSE exp_year + 1900
+                    END 
+
+UPDATE cards_data 
+SET acc_open_year = CASE 
+                    WHEN acc_open_year<30 THEN acc_open_year + 2000
+                    ELSE acc_open_year + 1900
+                    END 
+
 --ORDER BY 1 ASC
 
 --PART B CUSTOMER SEGMENTATION ANALYSIS
@@ -179,3 +208,4 @@ SELECT lifestage, COUNT(id) AS cus_count
 FROM users_data
 GROUP BY lifestage
 ORDER BY 2 DESC
+
