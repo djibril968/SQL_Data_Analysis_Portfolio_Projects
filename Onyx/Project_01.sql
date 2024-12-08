@@ -173,7 +173,25 @@ SET acc_open_year = CASE
                     ELSE acc_open_year + 1900
                     END 
 
---ORDER BY 1 ASC
+--Transaction data
+
+ALTER TABLE transactions_data
+ADD transact_time VARCHAR (10),
+    transact_date VARCHAR (10),
+    transact_month VARCHAR (20),
+    transact_year INT
+
+UPDATE transactions_data
+SET transact_time =TRIM(RIGHT([date], 5))
+
+UPDATE transactions_data
+SET    transact_date = LEFT([date], CHARINDEX(' ', [date])-1)
+
+UPDATE transactions_data
+SET transact_month = MONTH(transact_date),
+    transact_year = YEAR(transact_date)
+
+SELECT * FROM transactions_data
 
 --PART B CUSTOMER SEGMENTATION ANALYSIS
 
