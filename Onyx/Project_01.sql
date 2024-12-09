@@ -56,7 +56,7 @@ UPDATE users_data
 SET income_cat = CASE 
             WHEN yearly_income  >1 AND yearly_income <=24000 THEN 'low'
             WHEN yearly_income >=24001 AND yearly_income <=80000 THEN 'mid'
-            WHEN yearly_income >=80001 AND yearly_income <=120000 THEN 'high_mid'
+            WHEN yearly_income >=80001 AND yearly_income <=120000 THEN 'upper_mid'
             ELSE 'high'
             END
 
@@ -64,7 +64,7 @@ UPDATE users_data
 SET debt_cat = CASE 
             WHEN total_debt  >1 AND total_debt <=24000 THEN 'low'
             WHEN total_debt >=24001 AND total_debt <=80000 THEN 'mid'
-            WHEN total_debt >=80001 AND total_debt <=120000 THEN 'high_mid'
+            WHEN total_debt >=80001 AND total_debt <=120000 THEN 'upper_mid'
             ELSE 'high'
             END
 
@@ -200,30 +200,101 @@ SELECT gender, COUNT(id) AS gen_count
 FROM users_data
 GROUP BY gender
 
+--age distribution of customers
 SELECT age_cat, COUNT(id) AS age_dist
 FROM users_data
 GROUP BY age_cat
 ORDER BY 2 DESC
 
+--distribution across income group
 SELECT income_cat, COUNT(id) AS cus_count
 FROM users_data
 GROUP BY income_cat
 ORDER BY 2 DESC
 
-SELECT * FROM users_data
+--distribution across debt categories
 
 SELECT debt_cat, COUNT(id) AS cus_count
 FROM users_data
 GROUP BY debt_cat
 ORDER BY 2 DESC
 
+--distribtuion across credit score category
+
 SELECT credit_score_cat, COUNT(id) AS cus_count
 FROM users_data
 GROUP BY credit_score_cat
 ORDER BY 2 DESC
 
+--distribution across lifestage
 SELECT lifestage, COUNT(id) AS cus_count
 FROM users_data
 GROUP BY lifestage
 ORDER BY 2 DESC
+
+--distribution across number of credit cards
+
+SELECT num_credit_cards, COUNT(id) AS cus_count
+FROM users_data
+GROUP BY num_credit_cards
+ORDER BY 2 DESC
+
+--dist across number of cards and age_cat
+
+SELECT age_cat, num_credit_cards, COUNT(id) AS cus_count
+FROM users_data
+GROUP BY age_cat, num_credit_cards
+ORDER BY 1, 3 DESC
+
+SELECT gender, num_credit_cards, COUNT(id) AS cus_count
+FROM users_data
+GROUP BY gender, num_credit_cards
+ORDER BY 1, 3 DESC
+
+SELECT age_cat, gender, COUNT(id) AS cus_count
+FROM users_data
+GROUP BY age_cat, gender
+ORDER BY 1, 3 DESC
+
+SELECT age_cat, credit_score_cat, COUNT(id) AS cus_count
+FROM users_data
+GROUP BY age_cat, credit_score_cat
+ORDER BY 1, 3 DESC
+
+SELECT gender, credit_score_cat, COUNT(id) AS cus_count
+FROM users_data
+GROUP BY gender, credit_score_cat
+ORDER BY 1, 3 DESC
+
+
+SELECT age_cat, income_cat, COUNT(id) AS cus_count
+FROM users_data
+GROUP BY age_cat, income_cat
+ORDER BY 1, 3 DESC
+
+SELECT gender, income_cat, COUNT(id) AS cus_count
+FROM users_data
+GROUP BY gender, income_cat
+ORDER BY 1, 3 DESC
+
+SELECT age_cat, debt_cat, COUNT(id) AS cus_count
+FROM users_data
+GROUP BY age_cat, debt_cat
+ORDER BY 1, 3 DESC
+
+SELECT gender, debt_cat, COUNT(id) AS cus_count
+FROM users_data
+GROUP BY gender, debt_cat
+ORDER BY 1, 3 DESC
+
+
+SELECT income_cat, debt_cat, COUNT(id) AS cus_count
+FROM users_data
+GROUP BY income_cat, debt_cat
+ORDER BY 1, 3 DESC
+
+
+---to have a quick view of clumns in our tables
+
+
 
