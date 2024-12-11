@@ -181,6 +181,9 @@ ADD transact_time VARCHAR (10),
     transact_month VARCHAR (20),
     transact_year INT
 
+ALTER TABLE transactions_data
+ALTER COLUMN amount FLOAT
+
 UPDATE transactions_data
 SET transact_time =TRIM(RIGHT([date], 5))
 
@@ -302,6 +305,106 @@ GROUP BY lifestage, debt_cat
 ORDER BY 1
 
 
+--Transaction tbl
+
+--total transactions
+
+SELECT COUNT(id) AS tot_transact, ROUND(SUM(amount), 2) AS tot_rev
+FROM transactions_data
+
+--tot_transaction by clients
+
+SELECT client_id, COUNT(id) AS tot_transact
+FROM transactions_data
+GROUP BY client_id
+ORDER BY tot_transact DESC
+
+--tot amount spent by clients 
+SELECT client_id, ROUND(SUM(amount), 2) AS tot_spent
+FROM transactions_data
+GROUP BY client_id
+ORDER BY 2 DESC
+
+--tot_transactions by channel
+
+SELECT use_chip, COUNT(id) AS tot_transact, ROUND(SUM(amount), 2) AS rev_gen_channel
+FROM transactions_data
+GROUP BY use_chip
+ORDER BY 2 DESC
+
+--channel use by clients
+SELECT use_chip, COUNT(DISTINCT client_id) AS cus_count
+FROM transactions_data
+GROUP BY use_chip
+ORDER BY 2 DESC
+
+---merchant
+
+SELECT merchant_id, COUNT(id) AS tot_transact
+FROM transactions_data
+GROUP BY merchant_id
+ORDER BY 2 DESC
+
+SELECT merchant_id, COUNT(DISTINCT client_id) AS tot_cus
+FROM transactions_data
+GROUP BY merchant_id
+ORDER BY 2 DESC
+
+SELECT merchant_id, ROUND(SUM(amount), 2) AS rev_gen
+FROM transactions_data
+GROUP BY merchant_id
+ORDER BY 2 DESC
+
+SELECT COUNT(DISTINCT merchant_id) AS tot_mer
+FROM transactions_data
+---we shall come back to thie (merchants without city and state values )
+
+SELECT * 
+FROM transactions_data
+WHERE merchant_id IN (
+        SELECT DISTINCT merchant_id 
+        FROM transactions_data
+        WHERE merchant_city = '' OR merchant_state = ''
+        ) 
+
+--transactions and rev by city
+SELECT merchant_city, COUNT(id), ROUND(SUM(amount), 2) AS rev_gen
+FROM transactions_data
+GROUP BY merchant_city
+ORDER BY 2 DESC
+
+--transactions and rev by state
+SELECT merchant_state, COUNT(id), ROUND(SUM(amount), 2) AS rev_gen
+FROM transactions_data
+GROUP BY merchant_state
+ORDER BY 2 DESC
+
+--transactions by purchases/spendings
+
+SELECT mcc, COUNT(id) AS tot_tsact, ROUND(SUM(amount), 2) AS tot_spent
+FROM transactions_data
+GROUP BY mcc
+ORDER BY 2 DESC
+
+--errors
+
+SELECT COUNT(id) AS tot_err
+FROM transactions_data
+WHERE   errors != ''
+
+--lets tak a quick look at error transactions
+SELECT *
+FROM transactions_data
+WHERE   errors != ''
+
+
+--error categories
+
+SELECT errors, COUNT(id) AS err_count
+FROM transactions_data
+WHERE errors !=''
+GROUP BY errors
+ORDER BY 2 DESC
 
 
 
