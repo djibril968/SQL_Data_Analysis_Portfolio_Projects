@@ -143,6 +143,16 @@ FROM users_data
 
 --CARDS TABLE
 
+ALTER TABLE cards_data
+ALTER COLUMN credit_limit INT
+
+ALTER TABLE cards_data
+ALTER COLUMN cvv INT
+
+ALTER TABLE cards_data
+ALTER COLUMN num_cards_issued INT
+
+
 UPDATE cards_data
 SET credit_limit = SUBSTRING(credit_limit, 2, LEN(credit_limit)-1)
 
@@ -439,6 +449,77 @@ GROUP BY card_type
 SELECT has_chip, COUNT(id) AS card_count, COUNT(DISTINCT client_id) AS cus_count
 FROM cards_data
 GROUP BY has_chip
+
+----card issue across month and years
+SELECT acc_open_month, COUNT(DISTINCT id) AS acc_open_cnt, COUNT(DISTINCT client_id) AS cus_count
+FROM cards_data
+GROUP BY acc_open_month
+
+
+SELECT acc_open_year, COUNT(DISTINCT id) AS acc_open_cnt, COUNT(DISTINCT client_id) AS cus_count, 
+        SUM(num_cards_issued)
+FROM cards_data
+GROUP BY acc_open_year
+
+--total_cards issued
+SELECT SUM(num_cards_issued)
+FROM cards_data
+
+---card expiration
+
+SELECT exp_year, COUNT(DISTINCT id) AS acc_open_cnt, COUNT(DISTINCT client_id) AS cus_count, 
+        SUM(num_cards_issued)
+FROM cards_data
+GROUP BY exp_year
+
+SELECT exp_month, COUNT(DISTINCT id) AS acc_open_cnt, COUNT(DISTINCT client_id) AS cus_count, 
+        SUM(num_cards_issued)
+FROM cards_data
+GROUP BY exp_month
+
+
+/*
+PART B 2
+Now we proceed to analyzing our data looking into the following:
+Customer Retention and Churn analysis
+
+Customer Liifetime Value (AOV etc)
+
+Spending Analysis
+
+Top spenders and location
+
+The above will be carried out and measured across the folowing
+age-group, income_cat, location, lifestage
+
+predictive analysis to identify early warnings of churn
+
+
+PART B 3 
+Transaction analysis RFM across all customer groups
+
+Channel analysis
+
+mom transact and rev generation
+
+error analysis
+
+merchant analysis (top earners, )
+
+PART B 4
+
+Risk analysis (identify customers with high financial risk, utilize debt, card limit, income-cat, credit score,
+total debt across all customer segments)
+predict risk of default
+
+Fraud detection (indicators for fraudulent transactions etc)
+identify high value transactions for potential fraud
+
+Indepth spending patterns. regions prone to failed transactions and fraud
+
+
+
+*/
 --Customer segmentation analysis 
 
 SELECT client_id, COUNT(card_id) AS card_use_count, COUNT(client_id) AS transact_count
