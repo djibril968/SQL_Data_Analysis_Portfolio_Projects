@@ -406,8 +406,39 @@ WHERE errors !=''
 GROUP BY errors
 ORDER BY 2 DESC
 
+---testing to figure out fraud...nothing concrete yet
+SELECT id, errors, COUNT(id) AS err_count
+FROM transactions_data
+WHERE errors !=''
+GROUP BY id, errors
+ORDER BY id DESC
+
+---transactions by month and year
+
+SELECT transact_month, COUNT(id) AS tot_tsact, ROUND(SUM(amount), 2) AS tot_rev
+FROM transactions_data
+GROUP BY transact_month 
+ORDER BY 1 ASC
+
+SELECT transact_year, COUNT(id) AS tot_tsact, ROUND(SUM(amount), 2) AS tot_rev
+FROM transactions_data
+GROUP BY transact_year
+ORDER BY 1 ASC
 
 
+----- cards_data
+
+SELECT card_brand, COUNT(id) AS card_count, COUNT(DISTINCT client_id) AS cus_count
+FROM cards_data
+GROUP BY card_brand
+
+SELECT card_type, COUNT(id) AS card_count, COUNT(DISTINCT client_id) AS cus_count
+FROM cards_data
+GROUP BY card_type
+
+SELECT has_chip, COUNT(id) AS card_count, COUNT(DISTINCT client_id) AS cus_count
+FROM cards_data
+GROUP BY has_chip
 --Customer segmentation analysis 
 
 SELECT client_id, COUNT(card_id) AS card_use_count, COUNT(client_id) AS transact_count
