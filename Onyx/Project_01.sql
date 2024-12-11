@@ -193,6 +193,9 @@ SET transact_month = MONTH(transact_date),
 
 SELECT * FROM transactions_data
 
+
+----We stasrt by exploring our columns
+
 --PART B CUSTOMER SEGMENTATION ANALYSIS
 
 --customer distribution across groups
@@ -292,6 +295,37 @@ SELECT income_cat, debt_cat, COUNT(id) AS cus_count
 FROM users_data
 GROUP BY income_cat, debt_cat
 ORDER BY 1, 3 DESC
+
+SELECT lifestage, debt_cat, COUNT(id)
+FROM users_data
+GROUP BY lifestage, debt_cat
+ORDER BY 1
+
+
+
+
+
+--Customer segmentation analysis 
+
+SELECT client_id, COUNT(card_id) AS card_use_count, COUNT(client_id) AS transact_count
+FROM transactions_data
+GROUP BY client_id
+ORDER  BY 2
+
+
+---total transactions
+---average order value
+
+--average spending
+--RFM
+---spending analytics
+---Channel used
+--customer churn and retention analytics
+
+---errors analytic, and transaction risks
+
+----merchant analytics
+---top earning merchants, location etc
 
 
 ---to have a quick view of clumns in our tables
