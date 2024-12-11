@@ -481,6 +481,11 @@ GROUP BY exp_month
 /*
 PART B 2
 Now we proceed to analyzing our data looking into the following:
+
+Revenue analysis
+total revenue and change over the years
+
+
 Customer Retention and Churn analysis
 
 Customer Liifetime Value (AOV etc)
@@ -543,7 +548,23 @@ ORDER  BY 2
 ---top earning merchants, location etc
 
 
----to have a quick view of clumns in our tables
+---REVENUE ANALYSIS
+---total revenue and change over the years
 
+SELECT * FROM transactions_data
+
+SELECT transact_year, ROUND(SUM(amount),2) AS tot_rev
+FROM transactions_data
+GROUP BY transact_year
+ORDER BY 1 ASC
+
+---change in revenue generated
+SELECT transact_year, ROUND(SUM(amount),2) AS tot_rev, 
+        LAG(ROUND(SUM(amount),2), 1) OVER (ORDER BY transact_year) AS prev_year_rev
+        
+
+FROM transactions_data
+GROUP BY transact_year
+ORDER BY 1 ASC
 
 
