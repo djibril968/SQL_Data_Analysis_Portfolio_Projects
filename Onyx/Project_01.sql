@@ -483,6 +483,7 @@ PART B 2
 Now we proceed to analyzing our data looking into the following:
 
 Revenue analysis
+
 total revenue and change over the years
 
 
@@ -560,11 +561,50 @@ ORDER BY 1 ASC
 
 ---change in revenue generated
 SELECT transact_year, ROUND(SUM(amount),2) AS tot_rev, 
-        LAG(ROUND(SUM(amount),2), 1) OVER (ORDER BY transact_year) AS prev_year_rev
-        
-
+        LAG(ROUND(SUM(amount),2), 1) OVER (ORDER BY transact_year) AS prev_year_rev,
+       ROUND(SUM(amount) - LAG(SUM(amount), 1) OVER (ORDER BY transact_year),2) AS yoy_diff,
+       ROUND(((SUM(amount) - LAG(SUM(amount), 1) OVER (ORDER BY transact_year))/LAG(SUM(amount), 1) OVER (ORDER BY transact_year)
+       )*100,2) AS yoy_percent_diff
 FROM transactions_data
 GROUP BY transact_year
 ORDER BY 1 ASC
 
+--now we look at revenue across customer segments
+--revenue across gender
+SELECT t.transact_year, u.gender, ROUND(SUM(t.amount),2) AS tot_rev,
+        LAG(ROUND(SUM(t.amount),2), 1) OVER (PARTITION BY u.gender ORDER BY t.transact_year) AS prev_year_rev,
+       ROUND(SUM(t.amount) - LAG(SUM(t.amount), 1) OVER (PARTITION BY u.gender ORDER BY t.transact_year),2) AS yoy_diff,
+       ROUND(((SUM(t.amount) - LAG(SUM(t.amount), 1) OVER (PARTITION BY u.gender ORDER BY t.transact_year))/LAG(SUM(t.amount), 1) 
+       OVER (PARTITION BY u.gender ORDER BY transact_year)
+       )*100,2) AS yoy_percent_diff
+FROM transactions_data t
+JOIN users_data u
+ON t.client_id = u.id
+GROUP BY t.transact_year, u.gender
+ORDER BY 2, 1 ASC
 
+---revenue across age groups
+SELECT t.transact_year, u.age_cat, ROUND(SUM(t.amount),2) AS tot_rev,
+        LAG(ROUND(SUM(t.amount),2), 1) OVER (PARTITION BY u.age_cat ORDER BY t.transact_year) AS prev_year_rev,
+       ROUND(SUM(t.amount) - LAG(SUM(t.amount), 1) OVER (PARTITION BY u.age_cat ORDER BY t.transact_year),2) AS yoy_diff,
+       ROUND(((SUM(t.amount) - LAG(SUM(t.amount), 1) OVER (PARTITION BY u.age_cat ORDER BY t.transact_year))/LAG(SUM(t.amount), 1) 
+       OVER (PARTITION BY u.age_cat ORDER BY transact_year)
+       )*100,2) AS yoy_percent_diff
+FROM transactions_data t
+JOIN users_data u
+ON t.client_id = u.id
+GROUP BY t.transact_year, u.age_cat
+ORDER BY 2, 1 ASC
+
+---revenue across income category
+SELECT t.transact_year, u.age_cat, ROUND(SUM(t.amount),2) AS tot_rev,
+        LAG(ROUND(SUM(t.amount),2), 1) OVER (PARTITION BY u.age_cat ORDER BY t.transact_year) AS prev_year_rev,
+       ROUND(SUM(t.amount) - LAG(SUM(t.amount), 1) OVER (PARTITION BY u.age_cat ORDER BY t.transact_year),2) AS yoy_diff,
+       ROUND(((SUM(t.amount) - LAG(SUM(t.amount), 1) OVER (PARTITION BY u.age_cat ORDER BY t.transact_year))/LAG(SUM(t.amount), 1) 
+       OVER (PARTITION BY u.age_cat ORDER BY transact_year)
+       )*100,2) AS yoy_percent_diff
+FROM transactions_data t
+JOIN users_data u
+ON t.client_id = u.id
+GROUP BY t.transact_year, u.age_cat
+ORDER BY 2, 1 ASC
