@@ -484,7 +484,9 @@ Now we proceed to analyzing our data looking into the following:
 
 Revenue analysis
 
-total revenue and change over the years
+total revenue and change over the years (we left out
+monthly breadown, because we will utilize the time intelligence 
+capabilities of power BI during visualization)
 
 
 Customer Retention and Churn analysis
@@ -597,14 +599,49 @@ GROUP BY t.transact_year, u.age_cat
 ORDER BY 2, 1 ASC
 
 ---revenue across income category
-SELECT t.transact_year, u.age_cat, ROUND(SUM(t.amount),2) AS tot_rev,
-        LAG(ROUND(SUM(t.amount),2), 1) OVER (PARTITION BY u.age_cat ORDER BY t.transact_year) AS prev_year_rev,
-       ROUND(SUM(t.amount) - LAG(SUM(t.amount), 1) OVER (PARTITION BY u.age_cat ORDER BY t.transact_year),2) AS yoy_diff,
-       ROUND(((SUM(t.amount) - LAG(SUM(t.amount), 1) OVER (PARTITION BY u.age_cat ORDER BY t.transact_year))/LAG(SUM(t.amount), 1) 
-       OVER (PARTITION BY u.age_cat ORDER BY transact_year)
+SELECT t.transact_year, u.income_cat, ROUND(SUM(t.amount),2) AS tot_rev,
+        LAG(ROUND(SUM(t.amount),2), 1) OVER (PARTITION BY u.income_cat ORDER BY t.transact_year) AS prev_year_rev,
+       ROUND(SUM(t.amount) - LAG(SUM(t.amount), 1) OVER (PARTITION BY u.income_cat ORDER BY t.transact_year),2) AS yoy_diff,
+       ROUND(((SUM(t.amount) - LAG(SUM(t.amount), 1) OVER (PARTITION BY u.income_cat ORDER BY t.transact_year))/LAG(SUM(t.amount), 1) 
+       OVER (PARTITION BY u.income_cat ORDER BY transact_year)
        )*100,2) AS yoy_percent_diff
 FROM transactions_data t
 JOIN users_data u
 ON t.client_id = u.id
-GROUP BY t.transact_year, u.age_cat
+GROUP BY t.transact_year, u.income_cat
 ORDER BY 2, 1 ASC
+
+
+--revenue across lifestage
+
+SELECT t.transact_year, u.lifestage, ROUND(SUM(t.amount),2) AS tot_rev,
+        LAG(ROUND(SUM(t.amount),2), 1) OVER (PARTITION BY u.lifestage ORDER BY t.transact_year) AS prev_year_rev,
+       ROUND(SUM(t.amount) - LAG(SUM(t.amount), 1) OVER (PARTITION BY u.lifestage ORDER BY t.transact_year),2) AS yoy_diff,
+       ROUND(((SUM(t.amount) - LAG(SUM(t.amount), 1) OVER (PARTITION BY u.lifestage ORDER BY t.transact_year))/LAG(SUM(t.amount), 1) 
+       OVER (PARTITION BY u.lifestage ORDER BY transact_year)
+       )*100,2) AS yoy_percent_diff
+FROM transactions_data t
+JOIN users_data u
+ON t.client_id = u.id
+GROUP BY t.transact_year, u.lifestage
+ORDER BY 2, 1 ASC
+
+
+---Customer Retention and Churn analysis
+
+---total num,ber of active customers
+
+--total number of inactive customers
+
+---percentage of revenue and debt they represent
+--run the above against the various customer segments
+with act_cus_cte 
+AS
+(
+SELECT client_id, MIN(transact_date) AS first_transact, MAX(transact_date) AS last_tsact, COUNT(id) AS pur_count
+FROM transactions_data
+GROUP BY client_id
+ORDER BY 1
+)
+        SELECT SUM(pur_count) 
+        FROM act_cus_cte
