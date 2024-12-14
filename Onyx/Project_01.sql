@@ -629,19 +629,135 @@ ORDER BY 2, 1 ASC
 
 ---Customer Retention and Churn analysis
 
----total num,ber of active customers
+---total number of active customers
 
---total number of inactive customers
+SELECT COUNT(*) AS act_cus
+FROM (
+        SELECT u.id, MIN(t.transact_date) AS first_transact, MAX(t.transact_date) AS last_tsact, COUNT(t.id) AS pur_count
+        FROM transactions_data t
+        JOIN users_data u
+        ON u.id = t.client_id
+        GROUP BY u.id
+        HAVING COUNT(t.id) >0) AS sub;
 
----percentage of revenue and debt they represent
---run the above against the various customer segments
+--total active and inactive customers
 with act_cus_cte 
 AS
 (
-SELECT client_id, MIN(transact_date) AS first_transact, MAX(transact_date) AS last_tsact, COUNT(id) AS pur_count
-FROM transactions_data
-GROUP BY client_id
-ORDER BY 1
+        SELECT COUNT(*) AS act_cus
+        FROM(
+                SELECT u.id, MIN(t.transact_date) AS first_transact, MAX(t.transact_date) AS last_tsact, COUNT(t.id) AS pur_count
+                FROM transactions_data t
+                JOIN users_data u
+                ON u.id = t.client_id
+                GROUP BY u.id
+                HAVING COUNT(t.id) >0
+        )AS sub
+), inact_cus
+AS
+(
+        SELECT COUNT(*) AS inact_cus
+        FROM(
+                SELECT u.id, MIN(t.transact_date) AS first_transact, MAX(t.transact_date) AS last_tsact, COUNT(t.id) AS pur_count
+                FROM transactions_data t
+                RIGHT JOIN users_data u
+                ON u.id = t.client_id
+                WHERE t.client_id IS NULL
+                GROUP BY u.id
+        ) AS sub2
+), tot_cus
+AS
+                (
+                        SELECT COUNT(*) AS tot_cus
+                        FROM users_data
+                )
+        SELECT ac.act_cus, ia.inact_cus, tc.tot_cus
+        FROM act_cus_cte ac
+        CROSS JOIN inact_cus ia
+        CROSS JOIN tot_cus tc;
+
+
+---percentage of spendings and debt they represent
+
+---total spendings of active customers
+
+with act_cus_cte 
+AS
+(       SELECT ROUND(SUM(tot_spending),2) AS tot_ac_spend
+        FROM(
+                SELECT u.id, MIN(t.transact_date) AS first_transact, MAX(t.transact_date) AS last_tsact, COUNT(t.id) AS pur_count
+                        ,SUM(t.amount) AS tot_spending
+                FROM transactions_data t
+                JOIN users_data u
+                ON u.id = t.client_id
+                GROUP BY u.id
+                HAVING COUNT(t.id) >0
+        ) AS sub
+), inact_cus
+AS
+(
+        SELECT ROUND(SUM(tot_spending),2) AS tot_inac_spend
+        FROM(
+                SELECT u.id, MIN(t.transact_date) AS first_transact, MAX(t.transact_date) AS last_tsact, COUNT(t.id) AS pur_count
+                        ,SUM(t.amount) AS tot_spending
+                FROM transactions_data t
+                RIGHT JOIN users_data u
+                ON u.id = t.client_id
+                WHERE t.client_id IS NULL
+                GROUP BY u.id
+        ) AS subb
+        
+), tot_cus
+AS
+                (
+                        SELECT ROUND(SUM(amount),2) AS tot_spent
+                        FROM transactions_data
+                )
+        SELECT ac.tot_ac_spend, ia.tot_inac_spend, tc.tot_spent
+        FROM act_cus_cte ac
+        CROSS JOIN inact_cus ia
+        CROSS JOIN tot_cus tc;
+
+
+---total debt of active and inactive customers
+
+with act_cus_debt 
+AS
+(       SELECT SUM(total_debt) AS tot_ac_debt
+        FROM users_data
+        WHERE id IN (
+                        SELECT u.id
+                        FROM transactions_data t
+                        JOIN users_data u
+                        ON u.id = t.client_id
+	                GROUP BY u.id
+	                HAVING COUNT(t.id) > 0
+) 
+), inact_cus_debt
+AS
+(
+        SELECT SUM(total_debt) AS tot_inac_debt
+        FROM users_data
+        WHERE id IN (
+                        SELECT u.id
+                        FROM transactions_data t
+                        RIGHT JOIN users_data u
+                        ON u.id = t.client_id
+	                WHERE t.client_id IS NULL
+                        GROUP BY u.id
 )
-        SELECT SUM(pur_count) 
-        FROM act_cus_cte
+        
+), tot_cus
+AS
+                (
+                        SELECT ROUND(SUM(total_debt),2) AS tot_debt
+                        FROM users_data
+                )
+        SELECT ac.tot_ac_debt, ia.tot_inac_debt, tc.tot_debt, 
+                ROUND(CAST(ac.tot_ac_debt AS FLOAT) / CAST(tc.tot_debt AS FLOAT) *100,2) AS act_debt_per,
+                ROUND(CAST(ia.tot_inac_debt AS FLOAT) / CAST(tc.tot_debt AS FLOAT) *100,2) AS inact_debt_per
+        FROM act_cus_debt ac
+        CROSS JOIN inact_cus_debt ia
+        CROSS JOIN tot_cus tc;
+
+--run the above against the various customer segments
