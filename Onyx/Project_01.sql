@@ -760,4 +760,66 @@ AS
         CROSS JOIN inact_cus_debt ia
         CROSS JOIN tot_cus tc;
 
+
+/*Churn Rate: Calculate the overall churn rate over a specific period.
+Churn Velocity: Analyze how quickly customers are churning after acquisition.
+Time to Churn: Determine the average duration customers remain active before churning.
+*/
+---in the instance of our analysis, churned customers are those who had no transaction during the transaction cycle in question
+---- overall churn rate over the years
+
+SELECT c.client_id, MAX(t.transact_date) 
+FROM transactions_data t
+RIGHT JOIN cards_data c
+ON c.client_ID = t.client_id
+GROUP BY c.client_id
+HAVING  MAX(t.transact_date) IS NULL
+
+
+----customer acquisition / cohort analysis
+SELECT acc_open_year, COUNT(client_id) AS tot_cus_acq
+FROM cards_data
+GROUP BY acc_open_year
+ORDER BY 1
+
+
+WITH churned_cus
+AS
+        (SELECT c.client_id, 
+        MAX(t.transact_date) AS last_pur_date
+        FROM transactions_data t
+        LEFT JOIN cards_data c
+        ON c.client_ID = t.client_id
+        GROUP BY c.client_id
+        HAVING MAX(t.transact_date) IS NULL OR MAX(t.transact_date) < DATEADD(DAY, 730, CONVERT(DATE, GETDATE()))
+
+
+        ), 
+cus_acq
+AS
+        (
+        SELECT acc_open_year AS cohort_year, 
+        COUNT(client_id) AS tot_cus_acq
+        FROM cards_data
+        GROUP BY acc_open_year
+       -- ORDER BY 1
+        )
+                SELECT
+                ca.cohort_year,
+                ca.tot_cus_acq,
+                COALESCE(cc.churned_cus, 0) AS churned_cus,
+                ROUND((COALESCE(cc.churned_cus, 0) * 1.0/ca.tot_cus_acq)*100, 2) AS churn_rate
+                FROM cus_acq ca
+                LEFT JOIN (
+                        SELECT
+                        c.acc_open_year AS cohort_year,
+                        COUNT(cc.client_id) AS churned_cus
+                        FROM churned_cus cc
+                        JOIN cards_data c
+                        ON cc.client_id = c.client_id
+                        GROUP BY c.acc_open_year
+
+                )cc ON ca.cohort_year = cc.cohort_year
+                ORDER BY ca.cohort_year
+
 --run the above against the various customer segments
