@@ -775,7 +775,7 @@ GROUP BY c.client_id
 HAVING  MAX(t.transact_date) IS NULL
 
 
-----customer acquisition 
+----customer acquisition across years
 SELECT acc_open_year, COUNT(client_id) AS tot_cus_acq
 FROM cards_data
 GROUP BY acc_open_year
@@ -882,3 +882,66 @@ WHERE acc_open_year = 1991
 
 SELECT * FROM transactions_data
 WHERE client_id IN (285, 1362, 1692)
+
+---total transactions
+---average transact value
+with atv
+AS
+(
+        SELECT COUNT(id) AS transact_count, SUM(amount) AS tot_rev
+        FROM transactions_data
+)
+        SELECT ROUND(tot_rev/transact_count *100,2) AS aov
+        FROM atv;
+
+---atv over years
+with atv_yr
+AS
+(
+        SELECT transact_year,  COUNT(id) AS transact_count, SUM(amount) AS tot_rev
+        FROM transactions_data
+        GROUP BY transact_year
+)
+        SELECT transact_year, ROUND(tot_rev/transact_count  *100,2) AS aov
+        FROM atv_yr
+        ORDER BY 1
+
+---atv across customer groups
+--age
+
+WITH atv_age
+AS
+(
+        SELECT u.age_cat AS age_cat, COUNT(t.id) AS transact_count, SUM(t.amount) AS tot_rev
+        FROM transactions_data t
+        JOIN users_data u
+        ON t.client_id = u.id
+        GROUP BY u.age_cat
+)
+        SELECT age_cat, ROUND(tot_rev/transact_count  *100,2) AS aov
+        FROM atv_age
+        ORDER BY 1
+
+---lifestage
+
+WITH atv_lifestage
+AS
+(
+        SELECT u.lifestage AS lifestage, COUNT(t.id) AS transact_count, SUM(t.amount) AS tot_rev
+        FROM transactions_data t
+        JOIN users_data u
+        ON t.client_id = u.id
+        GROUP BY u.lifestage
+)
+        SELECT lifestage, ROUND(tot_rev/transact_count  *100,2) AS aov
+        FROM atv_lifestage
+        ORDER BY 1
+
+       --- GROUP BY transact_year
+
+
+
+--average spending
+--RFM
+---spending analytics
+---Channel used
