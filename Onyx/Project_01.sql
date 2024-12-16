@@ -937,11 +937,25 @@ AS
         FROM atv_lifestage
         ORDER BY 1
 
-       --- GROUP BY transact_year
-
 
 
 --average spending
---RFM
+--Recency Frequency Monetary value
+SELECT client_id, DATEDIFF(DAY, MIN(transact_date), MAX(transact_date)) AS recency
+        ,COUNT(id) AS freq, ROUND(SUM(amount),2) m_val
+FROM transactions_data
+GROUP BY client_id
+ORDER BY client_id
+
+----RFM across customer segments
+SELECT u.age_cat, t.client_id, DATEDIFF(DAY, MIN(t.transact_date), MAX(t.transact_date)) AS recency
+        ,COUNT(t.id) AS freq, ROUND(SUM(t.amount),2) m_val
+FROM transactions_data t
+JOIN  users_data u
+ON t.client_id = u.id
+GROUP BY u.age_cat, t.client_id
+ORDER BY u.age_cat, t.client_id
+
+SELECT 
 ---spending analytics
 ---Channel used
