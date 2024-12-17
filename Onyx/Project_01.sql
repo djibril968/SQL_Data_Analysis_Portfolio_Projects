@@ -992,7 +992,8 @@ GROUP BY u.lifestage, t.client_id
 ORDER BY u.lifestage, t.client_id
 
 select * from transactions_data;
----spending analytics
+
+---SPENDING ANALYTICS
 SELECT m.description, COUNT(t.id) AS pur_count
         ,COUNT(DISTINCT t.client_id) AS cus_count, ROUND(SUM(t.amount),2) AS tot_spent
 FROM transactions_data t
@@ -1032,6 +1033,7 @@ JOIN mcc_codes m
 ON t.mcc = m.mcc_id
 GROUP BY t.transact_year, m.[Description]
 ORDER BY t.transact_year, 5 DESC
+
 --- spendings across income cat
 SELECT u.income_cat, m.description, COUNT(t.id) AS pur_count
         ,COUNT(DISTINCT t.client_id) AS cus_count, ROUND(SUM(t.amount),2) AS tot_spent
@@ -1043,7 +1045,7 @@ ON t.client_id = u.id
 GROUP BY u.income_cat, m.[Description]
 ORDER BY u.income_cat, 5 DESC
 
-----top spenders
+----spending pattern for individual clients
 
 SELECT DISTINCT u.id, m.description, COUNT(t.id) AS pur_count
         ,ROUND(SUM(t.amount),2) AS tot_spent
@@ -1053,7 +1055,31 @@ ON t.mcc = m.mcc_id
 JOIN users_data u
 ON t.client_id = u.id
 GROUP BY u.id, m.[Description]
-ORDER BY 4 DESC
+ORDER BY 1,  4 DESC
+
+---what customers spent most money on
+WITH max_spen
+AS(
+        SELECT DISTINCT u.id AS client, m.description AS item_desc, COUNT(t.id) AS pur_count
+        ,ROUND(SUM(t.amount),2) AS amount_spent
+        FROM transactions_data t
+        JOIN mcc_codes m
+        ON t.mcc = m.mcc_id
+        JOIN users_data u
+        ON t.client_id = u.id
+        GROUP BY u.id, m.[Description]
+), ranked_spen 
+AS(
+        SELECT client, item_desc, pur_count, 
+                amount_spent,
+                RANK() OVER (PARTITION BY client ORDER BY amount_spent DESC) AS rank_
+        FROM max_spen
+)
+        SELECT client, item_desc, pur_count, amount_spent
+        FROM ranked_spen 
+        WHERE rank_ = 1
+        ORDER BY 4 DESC
+
 
 ---top_spenders
 SELECT TOP 5 t.client_id, COUNT(t.id) AS pur_count
@@ -1068,6 +1094,17 @@ SELECT TOP 5 t.client_id, COUNT(t.id) AS pur_count
 FROM transactions_data t
 GROUP BY t.client_id
 ORDER BY 3 ASC
+
+
+---channel analysis
+
+---transaction distribution across channels
+SELECT use_chip, COUNT(id) AS transact_cnt, COUNT(DISTINCT client_id) AS cus_cnt
+FROM transactions_data
+GROUP BY use_chip
+
+---aov_channel
+
 
 
 
