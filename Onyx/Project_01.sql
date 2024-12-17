@@ -1200,12 +1200,17 @@ FROM transactions_data
 GROUP BY merchant_id
 ORDER BY 5
 
-
+SELECT * FROM mcc_codes
 
 ----
 
 ---customer, transaction  and merchant density across states
 
+---cus_density across
+SELECT merchant_state, COUNT(DISTINCT client_id) AS cus_count, COUNT(id) AS txn_count, COUNT(DISTINCT merchant_id), ROUND(SUM(amount), 2) AS rev
+FROM transactions_data
+GROUP BY merchant_state
+ORDER BY 4 ASC
 
 -----we shall use the time intelligence function of power Bi to further drill down size of each merchnat transactions over the years
 ----merchnat use across 
@@ -1215,10 +1220,48 @@ ORDER BY 5
 ---transaction distribution across channels
 SELECT use_chip, COUNT(id) AS transact_cnt, COUNT(DISTINCT client_id) AS cus_cnt
 FROM transactions_data
-GROUP BY use_chip
+GROUP BY use_chip;
 
--------how payment methods vary by product category, merchnat and customer segments
+-------how payment methods vary by product category, merchant and customer segments
+
+SELECT m.[Description], t.use_chip, COUNT(t.id) AS txn_cnt, COUNT(DISTINCT t.client_id) AS cus_count
+        ,ROUND(SUM(t.amount), 2) AS rev
+FROM transactions_data t
+JOIN mcc_codes m
+ON t.mcc = m.mcc_id
+GROUP BY m.[Description], t.use_chip
+
+---channel actross cus_segments
+--lifestage
+SELECT u.lifestage, t.use_chip, COUNT(t.id) AS txn_cnt, COUNT(DISTINCT t.client_id) AS cus_count
+        ,ROUND(SUM(t.amount), 2) AS rev
+FROM transactions_data t
+JOIN users_data u
+ON t.client_id = u.id
+GROUP BY u.lifestage, t.use_chip
+ORDER BY 1,  3 DESC
+
+
+---age_cat
+SELECT u.lifestage, t.use_chip, COUNT(t.id) AS txn_cnt, COUNT(DISTINCT t.client_id) AS cus_count
+        ,ROUND(SUM(t.amount), 2) AS rev
+FROM transactions_data t
+JOIN users_data u
+ON t.client_id = u.id
+GROUP BY u.lifestage, t.use_chip
+ORDER BY 1,  3 DESC
 ----how payment methods vary by geographic region
+/*PART B 4
+
+Risk analysis (identify customers with high financial risk, utilize debt, card limit, income-cat, credit score,
+total debt across all customer segments)
+predict risk of default
+
+Fraud detection (indicators for fraudulent transactions etc)
+identify high value transactions for potential fraud
+
+Indepth spending patterns. regions prone to failed transactions and fraud
+*/
 
 SELECT *
 FROM transactions_data;
