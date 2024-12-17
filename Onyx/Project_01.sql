@@ -477,6 +477,7 @@ SELECT exp_month, COUNT(DISTINCT id) AS acc_open_cnt, COUNT(DISTINCT client_id) 
 FROM cards_data
 GROUP BY exp_month
 
+SELECT * FROM transactions_data
 
 /*
 PART B 2
@@ -982,7 +983,7 @@ GROUP BY u.age_cat, t.client_id
 ORDER BY u.age_cat, t.client_id
 
 
----RFM across lifesateg
+---RFM across lifestage
 SELECT u.lifestage, t.client_id, DATEDIFF(DAY, MIN(t.transact_date), MAX(t.transact_date)) AS recency
         ,COUNT(t.id) AS freq, ROUND(SUM(t.amount),2) m_val
 FROM transactions_data t
@@ -1080,6 +1081,52 @@ AS(
         WHERE rank_ = 1
         ORDER BY 4 DESC
 
+---lets look at this across customer segments
+
+WITH max_spen_age_cat
+AS(
+        SELECT DISTINCT u.age_cat AS age_cat, m.description AS item_desc, COUNT(t.id) AS transact_count
+        ,COUNT(DISTINCT t.client_id) AS tot_cus, ROUND(SUM(t.amount),2) AS amount_spent
+        FROM transactions_data t
+        JOIN mcc_codes m
+        ON t.mcc = m.mcc_id
+        JOIN users_data u
+        ON t.client_id = u.id
+        GROUP BY u.age_cat, m.[Description]
+), ranked_spen 
+AS(
+        SELECT age_cat, item_desc, transact_count, tot_cus,
+                amount_spent,
+                RANK() OVER (PARTITION BY age_cat ORDER BY amount_spent DESC) AS rank_
+        FROM max_spen_age_cat
+)
+        SELECT age_cat, item_desc, transact_count, tot_cus, amount_spent
+        FROM ranked_spen 
+        WHERE rank_ = 1
+        ORDER BY 4 DESC;
+
+----lifestage
+WITH max_spen_lifestage
+AS(
+        SELECT DISTINCT u.lifestage AS lifestage, m.description AS item_desc, COUNT(t.id) AS transact_count
+        ,COUNT(DISTINCT t.client_id) AS tot_cus, ROUND(SUM(t.amount),2) AS amount_spent
+        FROM transactions_data t
+        JOIN mcc_codes m
+        ON t.mcc = m.mcc_id
+        JOIN users_data u
+        ON t.client_id = u.id
+        GROUP BY u.lifestage, m.[Description]
+), ranked_spen 
+AS(
+        SELECT lifestage, item_desc, transact_count, tot_cus,
+                amount_spent,
+                RANK() OVER (PARTITION BY lifestage ORDER BY amount_spent DESC) AS rank_
+        FROM max_spen_lifestage
+)
+        SELECT lifestage, item_desc, transact_count, tot_cus, amount_spent
+        FROM ranked_spen 
+        WHERE rank_ = 1
+        ORDER BY 4 DESC
 
 ---top_spenders
 SELECT TOP 5 t.client_id, COUNT(t.id) AS pur_count
@@ -1096,13 +1143,16 @@ GROUP BY t.client_id
 ORDER BY 3 ASC
 
 
----channel analysis
+---CHANNEL ANALYTICS
 
 ---transaction distribution across channels
 SELECT use_chip, COUNT(id) AS transact_cnt, COUNT(DISTINCT client_id) AS cus_cnt
 FROM transactions_data
 GROUP BY use_chip
 
+
+SELECT DISTINCT errors
+FROM transactions_data
 ---aov_channel
 
 
