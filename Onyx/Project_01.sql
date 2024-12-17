@@ -493,6 +493,7 @@ Customer Retention and Churn analysis
 
 Customer Liifetime Value (AOV etc)
 
+
 Spending Analysis
 
 Top spenders and location
@@ -501,7 +502,6 @@ The above will be carried out and measured across the folowing
 age-group, income_cat, location, lifestage
 
 predictive analysis to identify early warnings of churn
-
 
 PART B 3 
 Transaction analysis RFM across all customer groups
@@ -935,11 +935,36 @@ AS
 )
         SELECT lifestage, ROUND(tot_rev/transact_count  *100,2) AS aov
         FROM atv_lifestage
+        ORDER BY 1;
+
+----channel
+
+WITH atv_channel
+AS
+(
+        SELECT use_chip, COUNT(id) AS transact_count, SUM(amount) AS tot_rev
+        FROM transactions_data 
+        GROUP BY use_chip
+)
+        SELECT use_chip, ROUND(tot_rev/transact_count  *100,2) AS aov
+        FROM atv_channel
         ORDER BY 1
 
+---merchant
 
+select * from transactions_data;
 
---average spending
+WITH atv_merchant
+AS
+(
+        SELECT CAST(merchant_id AS INT) merchant, COUNT(id) AS transact_count, SUM(amount) AS tot_rev
+        FROM transactions_data 
+        GROUP BY merchant_id
+)
+        SELECT merchant, ROUND(tot_rev/transact_count  *100,2) AS aov
+        FROM atv_merchant
+        ORDER BY 1
+
 --Recency Frequency Monetary value
 SELECT client_id, DATEDIFF(DAY, MIN(transact_date), MAX(transact_date)) AS recency
         ,COUNT(id) AS freq, ROUND(SUM(amount),2) m_val
@@ -956,6 +981,96 @@ ON t.client_id = u.id
 GROUP BY u.age_cat, t.client_id
 ORDER BY u.age_cat, t.client_id
 
-SELECT 
+
+---RFM across lifesateg
+SELECT u.lifestage, t.client_id, DATEDIFF(DAY, MIN(t.transact_date), MAX(t.transact_date)) AS recency
+        ,COUNT(t.id) AS freq, ROUND(SUM(t.amount),2) m_val
+FROM transactions_data t
+JOIN  users_data u
+ON t.client_id = u.id
+GROUP BY u.lifestage, t.client_id
+ORDER BY u.lifestage, t.client_id
+
+select * from transactions_data;
 ---spending analytics
+SELECT m.description, COUNT(t.id) AS pur_count
+        ,COUNT(DISTINCT t.client_id) AS cus_count, ROUND(SUM(t.amount),2) AS tot_spent
+FROM transactions_data t
+JOIN mcc_codes m
+ON t.mcc = m.mcc_id
+GROUP BY m.[Description]
+ORDER BY 4 DESC
+
+---spendings across customer segments
+SELECT u.age_cat, m.description, COUNT(t.id) AS pur_count
+        ,COUNT(DISTINCT t.client_id) AS cus_count, ROUND(SUM(t.amount),2) AS tot_spent
+FROM transactions_data t
+JOIN mcc_codes m
+ON t.mcc = m.mcc_id
+JOIN users_data u
+ON t.client_id = u.id
+GROUP BY u.age_cat, m.[Description]
+ORDER BY u.age_cat, 5 DESC
+
+---lifestage
+
+SELECT u.lifestage, m.description, COUNT(t.id) AS pur_count
+        ,COUNT(DISTINCT t.client_id) AS cus_count, ROUND(SUM(t.amount),2) AS tot_spent
+FROM transactions_data t
+JOIN mcc_codes m
+ON t.mcc = m.mcc_id
+JOIN users_data u
+ON t.client_id = u.id
+GROUP BY u.lifestage, m.[Description]
+ORDER BY u.lifestage, 5 DESC
+
+----years
+SELECT t.transact_year, m.description, COUNT(t.id) AS pur_count
+        ,COUNT(DISTINCT t.client_id) AS cus_count, ROUND(SUM(t.amount),2) AS tot_spent
+FROM transactions_data t
+JOIN mcc_codes m
+ON t.mcc = m.mcc_id
+GROUP BY t.transact_year, m.[Description]
+ORDER BY t.transact_year, 5 DESC
+--- spendings across income cat
+SELECT u.income_cat, m.description, COUNT(t.id) AS pur_count
+        ,COUNT(DISTINCT t.client_id) AS cus_count, ROUND(SUM(t.amount),2) AS tot_spent
+FROM transactions_data t
+JOIN mcc_codes m
+ON t.mcc = m.mcc_id
+JOIN users_data u
+ON t.client_id = u.id
+GROUP BY u.income_cat, m.[Description]
+ORDER BY u.income_cat, 5 DESC
+
+----top spenders
+
+SELECT DISTINCT u.id, m.description, COUNT(t.id) AS pur_count
+        ,ROUND(SUM(t.amount),2) AS tot_spent
+FROM transactions_data t
+JOIN mcc_codes m
+ON t.mcc = m.mcc_id
+JOIN users_data u
+ON t.client_id = u.id
+GROUP BY u.id, m.[Description]
+ORDER BY 4 DESC
+
+---top_spenders
+SELECT TOP 5 t.client_id, COUNT(t.id) AS pur_count
+        ,ROUND(SUM(t.amount),2) AS tot_spent
+FROM transactions_data t
+GROUP BY t.client_id
+ORDER BY 3 DESC
+
+---least spenders
+SELECT TOP 5 t.client_id, COUNT(t.id) AS pur_count
+        ,ROUND(SUM(t.amount),2) AS tot_spent
+FROM transactions_data t
+GROUP BY t.client_id
+ORDER BY 3 ASC
+
+
+
+
+SELECT * FROM mcc_codes
 ---Channel used
