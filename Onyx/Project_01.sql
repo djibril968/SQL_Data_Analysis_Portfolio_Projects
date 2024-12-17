@@ -1142,18 +1142,98 @@ FROM transactions_data t
 GROUP BY t.client_id
 ORDER BY 3 ASC
 
+---merchant analytics
+SELECT COUNT(DISTINCT merchant_id) AS tot_merchant
+FROM transactions_data
 
----CHANNEL ANALYTICS
+SELECT merchant_id,
+ COUNT(DISTINCT id) AS tot_merchant
+FROM transactions_data
+GROUP BY merchant_id
+ORDER BY 2 DESC
+
+-----merchant distribution across locations
+
+SELECT merchant_state, COUNT(distinct merchant_id) AS merch_count
+FROM transactions_data
+GROUP BY merchant_state
+ORDER BY 2 DESC
+
+---merchant transaction count and size
+
+ SELECT merchant_id,  COUNT(id) AS txn_count, COUNT(DISTINCT client_id) AS cus_count, ROUND(SUM(amount), 2) AS REV
+ FROM transactions_data
+ GROUP BY merchant_id
+ ORDER BY 4 DESC
+
+
+--merchant perfromance
+
+---top five merchants by customer count
+WITH mer_cus_rank 
+AS(
+        SELECT merchant_id, COUNT(id) AS txn_count, COUNT(DISTINCT client_id) AS cus_count, ROUND(SUM(amount), 2) AS rev
+        FROM transactions_data
+        GROUP BY merchant_id
+
+)---, rannk 
+---AS
+--(
+        SELECT TOP 5 merchant_id, txn_count, cus_count, rev,
+            RANK () OVER(ORDER BY cus_count DESC) AS rank_
+        FROM mer_cus_rank;     
+
+
+--merchants with highest number of transactions
+
+SELECT TOP 5 merchant_id, COUNT(id) AS txn_count, COUNT(DISTINCT client_id) AS cus_count, ROUND(SUM(amount), 2) AS rev,
+        RANK () OVER(ORDER BY COUNT(id)  DESC) AS rank_
+FROM transactions_data
+GROUP BY merchant_id
+ORDER BY 5
+
+---top revenue generating merchants
+
+SELECT TOP 5 merchant_id, COUNT(id) AS txn_count, COUNT(DISTINCT client_id) AS cus_count, ROUND(SUM(amount), 2) AS rev,
+        RANK () OVER(ORDER BY ROUND(SUM(amount), 2)  DESC) AS rank_
+FROM transactions_data
+GROUP BY merchant_id
+ORDER BY 5
+
+
+
+----
+
+---customer, transaction  and merchant density across states
+
+
+-----we shall use the time intelligence function of power Bi to further drill down size of each merchnat transactions over the years
+----merchnat use across 
+
+---CHANNEL, ERROR and FRAUD  ANALYTICS
 
 ---transaction distribution across channels
 SELECT use_chip, COUNT(id) AS transact_cnt, COUNT(DISTINCT client_id) AS cus_cnt
 FROM transactions_data
 GROUP BY use_chip
 
+-------how payment methods vary by product category, merchnat and customer segments
+----how payment methods vary by geographic region
 
-SELECT DISTINCT errors
-FROM transactions_data
----aov_channel
+SELECT *
+FROM transactions_data;
+---atv_channel
+WITH atv_channel
+AS
+(
+        SELECT use_chip, COUNT(id) AS transact_count, SUM(amount) AS tot_rev
+        FROM transactions_data 
+        GROUP BY use_chip
+)
+        SELECT use_chip, ROUND(tot_rev/transact_count  *100,2) AS aov
+        FROM atv_channel
+        ORDER BY 1
+
 
 
 
@@ -1161,3 +1241,5 @@ FROM transactions_data
 
 SELECT * FROM mcc_codes
 ---Channel used
+
+---transaction footprint for each customer
