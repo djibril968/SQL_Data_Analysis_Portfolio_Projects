@@ -1289,7 +1289,7 @@ WHERE id IN
                         ---ORDER BY 2 DESC
                 )
 
----errors distribution
+---errors distribution across types
 SELECT t.errors, COUNT(errors) AS err_cnt
 FROM transactions_data t
 WHERE t.errors != ''
@@ -1298,12 +1298,22 @@ ORDER BY 2 DESC
 
 ----errors count by merchant
 
-SELECT merchant_id, COUNT(errors) AS err_cnt
+SELECT t.merchant_id, COUNT(t.errors) AS err_cnt
 FROM transactions_data t
 WHERE t.errors != ''
-GROUP BY merchant_id
+GROUP BY t.merchant_id
 ORDER BY 2 DESC
 
+
+----errors count by merchant_cat
+
+SELECT t.mcc, m.[description], COUNT(t.errors) AS err_cnt
+FROM transactions_data t
+LEFT JOIN mcc_codes m
+ON t.mcc = m.mcc_id
+WHERE t.errors != ''
+GROUP BY t.mcc, m.[description]
+ORDER BY 3 DESC
 
 ----errors count by channel
 SELECT use_chip, COUNT(errors) AS err_cnt
@@ -1327,15 +1337,42 @@ WHERE t.errors != ''
 GROUP BY merchant_state
 ORDER BY 2 DESC
 
-select * from transactions_data
+----to detect fradulent transactions, we will look at the transaction date against the card expiry date
 
-SELECT t.id, t.[date], t.client_id, t.card_id, t.errors, t.merchant_city, c.expires
+select count(*) from transactions_data
+----we start by lookint into successful transactions
+SELECT t.id, t.[date], t.client_id, t.card_id, t.errors, t.merchant_city, c.adjusted_exp_date
 FROM transactions_data t
 JOIN cards_data c
 ON t.card_id = c.id AND t.client_id = c.client_id
-WHERE t.errors != ''
+WHERE t.errors = '' AND t.[date] > c.adjusted_exp_date
 ORDER BY t.client_id, t.[date]
 
+SELECT t.id, t.[date], t.client_id, t.card_id, t.errors, t.merchant_city, c.adjusted_exp_date
+FROM transactions_data t
+JOIN cards_data c
+ON t.card_id = c.id AND t.client_id = c.client_id
+WHERE t.errors = '' AND t.[date] <= c.adjusted_exp_date
+ORDER BY t.client_id, t.[date]
+
+SELECT t.id, t.[date], t.client_id, t.card_id, t.errors, t.merchant_city, c.adjusted_exp_date
+FROM transactions_data t
+JOIN cards_data c
+ON t.card_id = c.id AND t.client_id = c.client_id
+WHERE t.errors != '' AND t.[date] <= c.adjusted_exp_date
+ORDER BY t.client_id, t.[date]
+
+SELECT t.id, t.[date], t.client_id, t.card_id, t.errors, t.merchant_city, c.adjusted_exp_date
+FROM transactions_data t
+JOIN cards_data c
+ON t.card_id = c.id AND t.client_id = c.client_id
+WHERE t.errors != '' 
+ORDER BY t.client_id, t.[date]
+
+SELECT t.id, t.[date], t.client_id, t.card_id, t.errors, t.merchant_city
+FROM transactions_data t
+WHERE t.errors != '' 
+ORDER BY t.client_id, t.[date]
 --Fraud detection (indicators for fraudulent transactions etc)
 --identify high value transactions for potential fraud
 
