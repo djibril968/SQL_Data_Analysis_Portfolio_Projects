@@ -1342,28 +1342,27 @@ ORDER BY 2 DESC;
 --Therefore, any transaction carried out after 30days from the expiration month-year on the card is a risky/fradulent transaction
 
 select count(*) from transactions_data;
-----we start by lookint into successful transactions
+----total count of fradulent transactions
 
-WITH fraud_cte
-AS 
-(
-        SELECT t.id, t.[date] AS tsact_date, t.client_id, t.transact_time, t.card_id, t.errors, 
-                        t.merchant_city, c.adjusted_exp_date, 
-                        DATEDIFF(DAY, c.adjusted_exp_date, t.[date]) AS days_since_exp
-        FROM transactions_data t
-        JOIN cards_data c
-        ON t.card_id = c.id AND t.client_id = c.client_id
-        WHERE t.errors = '' AND t.[date] > c.adjusted_exp_date
-       
-)
-        SELECT id, tsact_date, client_id, transact_time, card_id,
-                errors, adjusted_exp_date
-                ,days_since_exp
-        FROM fraud_cte
-        WHERE days_since_exp > 30
+SELECT COUNT (*) fraud_tsact
+FROM  transactions_data tt
+WHERE id IN
+                (
+                        SELECT sub.id
+                        FROM
+                        (
+                                SELECT t.id, t.[date] AS tsact_date, t.client_id, t.transact_time, t.card_id, t.errors, 
+                                                t.merchant_city, c.adjusted_exp_date, 
+                                        DATEDIFF(DAY, c.adjusted_exp_date, t.[date]) AS days_since_exp
+                                FROM transactions_data t
+                                JOIN cards_data c
+                                ON t.card_id = c.id AND t.client_id = c.client_id
+                                WHERE t.[date] > c.adjusted_exp_date
+                        ) sub
+                        WHERE sub.days_since_exp > 30
+                )
 
-------------------------------------------------------------------------------------------------------
-
+-------------------------------------------------------------------------------------------------------
 
 WITH fraud_cte
 AS 
