@@ -182,6 +182,11 @@ SET acc_open_year = CASE
                     WHEN acc_open_year<30 THEN acc_open_year + 2000
                     ELSE acc_open_year + 1900
                     END 
+ALTER TABLE cards_data
+ADD adjusted_exp_date DATE
+
+UPDATE cards_data
+SET adjusted_exp_date = CONVERT(DATETIME, '01-' + expires, 106)
 
 --Transaction data
 
@@ -1269,10 +1274,67 @@ GROUP BY merchant_state, t.use_chip
 ORDER BY 1,  3 DESC
 
 
----error analysis
+---error and fraud detection analysis
+
+---total errors
+SELECT COUNT(id) AS err_txn
+FROM transactions_data
+WHERE id IN
+                ( SELECT id
+                FROM ( 
+                        SELECT t.id,  t.errors, COUNT(errors) AS err_cnt
+                        FROM transactions_data t
+                        WHERE t.errors != ''
+                        GROUP BY t.id, t.errors) sub
+                        ---ORDER BY 2 DESC
+                )
 
 ---errors distribution
+SELECT t.errors, COUNT(errors) AS err_cnt
+FROM transactions_data t
+WHERE t.errors != ''
+GROUP BY t.errors
+ORDER BY 2 DESC
 
+----errors count by merchant
+
+SELECT merchant_id, COUNT(errors) AS err_cnt
+FROM transactions_data t
+WHERE t.errors != ''
+GROUP BY merchant_id
+ORDER BY 2 DESC
+
+
+----errors count by channel
+SELECT use_chip, COUNT(errors) AS err_cnt
+FROM transactions_data t
+WHERE t.errors != ''
+GROUP BY use_chip
+ORDER BY 2 DESC
+
+
+----errors count by location (city)
+SELECT merchant_city, COUNT(errors) AS err_cnt
+FROM transactions_data t
+WHERE t.errors != ''
+GROUP BY merchant_city
+ORDER BY 2 DESC
+
+----errors count by location (state)
+SELECT merchant_state, COUNT(errors) AS err_cnt
+FROM transactions_data t
+WHERE t.errors != ''
+GROUP BY merchant_state
+ORDER BY 2 DESC
+
+select * from transactions_data
+
+SELECT t.id, t.[date], t.client_id, t.card_id, t.errors, t.merchant_city, c.expires
+FROM transactions_data t
+JOIN cards_data c
+ON t.card_id = c.id AND t.client_id = c.client_id
+WHERE t.errors != ''
+ORDER BY t.client_id, t.[date]
 
 --Fraud detection (indicators for fraudulent transactions etc)
 --identify high value transactions for potential fraud
@@ -1283,6 +1345,7 @@ ORDER BY 1,  3 DESC
 Risk analysis (identify customers with high financial risk, utilize debt, card limit, income-cat, credit score,
 total debt across all customer segments)
 predict risk of default
+
 
 
 Indepth spending patterns. regions prone to failed transactions and fraud
@@ -1304,16 +1367,17 @@ ON t.card_id = c.id AND t.client_id = c.client_id
 WHERE t.errors = 'Bad Expiration'
 ORDER BY t.client_id, t.[date]
 
+
 ----to detect fradulent transactions we shall come up with some assumptions
 ---we look into the transaction date and the expiration date of the user card
+
 
 SELECT t.id, t.[date], t.client_id, t.card_id, t.errors, t.merchant_city, c.expires
 FROM transactions_data t
 JOIN cards_data c
 ON t.card_id = c.id AND t.client_id = c.client_id
-WHERE t.errors = 'Bad Expiration'
+WHERE t.errors = ''
 ORDER BY t.client_id, t.[date]
-
 
 SELECT *
 FROM cards_data
