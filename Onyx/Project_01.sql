@@ -1243,40 +1243,89 @@ ORDER BY 1,  3 DESC
 
 
 ---age_cat
-SELECT u.lifestage, t.use_chip, COUNT(t.id) AS txn_cnt, COUNT(DISTINCT t.client_id) AS cus_count
+SELECT u.age_cat, t.use_chip, COUNT(t.id) AS txn_cnt, COUNT(DISTINCT t.client_id) AS cus_count
         ,ROUND(SUM(t.amount), 2) AS rev
 FROM transactions_data t
 JOIN users_data u
 ON t.client_id = u.id
-GROUP BY u.lifestage, t.use_chip
+GROUP BY u.age_cat, t.use_chip
 ORDER BY 1,  3 DESC
+
+--gender
+
+SELECT u.gender, t.use_chip, COUNT(t.id) AS txn_cnt, COUNT(DISTINCT t.client_id) AS cus_count
+        ,ROUND(SUM(t.amount), 2) AS rev
+FROM transactions_data t
+JOIN users_data u
+ON t.client_id = u.id
+GROUP BY u.gender, t.use_chip
+ORDER BY 1,  3 DESC
+
 ----how payment methods vary by geographic region
+SELECT merchant_state, t.use_chip, COUNT(t.id) AS txn_cnt, COUNT(DISTINCT t.client_id) AS cus_count
+        ,ROUND(SUM(t.amount), 2) AS rev
+FROM transactions_data t
+GROUP BY merchant_state, t.use_chip
+ORDER BY 1,  3 DESC
+
+
+---error analysis
+
+---errors distribution
+
+
+--Fraud detection (indicators for fraudulent transactions etc)
+--identify high value transactions for potential fraud
+
+
 /*PART B 4
 
 Risk analysis (identify customers with high financial risk, utilize debt, card limit, income-cat, credit score,
 total debt across all customer segments)
 predict risk of default
 
-Fraud detection (indicators for fraudulent transactions etc)
-identify high value transactions for potential fraud
 
 Indepth spending patterns. regions prone to failed transactions and fraud
 */
 
 SELECT *
-FROM transactions_data;
+FROM transactions_data
+WHERE amount LIKE '%-%' AND errors = '';
 ---atv_channel
-WITH atv_channel
-AS
-(
-        SELECT use_chip, COUNT(id) AS transact_count, SUM(amount) AS tot_rev
-        FROM transactions_data 
-        GROUP BY use_chip
-)
-        SELECT use_chip, ROUND(tot_rev/transact_count  *100,2) AS aov
-        FROM atv_channel
-        ORDER BY 1
 
+SELECT *
+FROM transactions_data
+WHERE errors = 'Bad Expiration'
+
+SELECT t.id, t.[date], t.client_id, t.card_id, t.errors, t.merchant_city, c.expires
+FROM transactions_data t
+JOIN cards_data c
+ON t.card_id = c.id AND t.client_id = c.client_id
+WHERE t.errors = 'Bad Expiration'
+ORDER BY t.client_id, t.[date]
+
+----to detect fradulent transactions we shall come up with some assumptions
+---we look into the transaction date and the expiration date of the user card
+
+SELECT t.id, t.[date], t.client_id, t.card_id, t.errors, t.merchant_city, c.expires
+FROM transactions_data t
+JOIN cards_data c
+ON t.card_id = c.id AND t.client_id = c.client_id
+WHERE t.errors = 'Bad Expiration'
+ORDER BY t.client_id, t.[date]
+
+
+SELECT *
+FROM cards_data
+WHERE errors = 'Bad Expiration'
+
+SELECT errors, COUNT(errors) AS err_cnt
+FROM transactions_data
+WHERE errors != ''
+GROUP BY errors
+ORDER BY 2 DESC
+
+SELECT * FROM cards_data
 
 
 
