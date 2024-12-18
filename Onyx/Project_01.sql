@@ -1335,44 +1335,54 @@ SELECT merchant_state, COUNT(errors) AS err_cnt
 FROM transactions_data t
 WHERE t.errors != ''
 GROUP BY merchant_state
-ORDER BY 2 DESC
+ORDER BY 2 DESC;
 
 ----to detect fradulent transactions, we will look at the transaction date against the card expiry date
+---we work with the standard assumption that all card expire at the end of the specified month on the card hence we work with a 30day interval.
+--Therefore, any transaction carried out after 30days from the expiration month-year on the card is a risky/fradulent transaction
 
-select count(*) from transactions_data
+select count(*) from transactions_data;
 ----we start by lookint into successful transactions
-SELECT t.id, t.[date], t.client_id, t.card_id, t.errors, t.merchant_city, c.adjusted_exp_date
-FROM transactions_data t
-JOIN cards_data c
-ON t.card_id = c.id AND t.client_id = c.client_id
-WHERE t.errors = '' AND t.[date] > c.adjusted_exp_date
-ORDER BY t.client_id, t.[date]
 
-SELECT t.id, t.[date], t.client_id, t.card_id, t.errors, t.merchant_city, c.adjusted_exp_date
-FROM transactions_data t
-JOIN cards_data c
-ON t.card_id = c.id AND t.client_id = c.client_id
-WHERE t.errors = '' AND t.[date] <= c.adjusted_exp_date
-ORDER BY t.client_id, t.[date]
+WITH fraud_cte
+AS 
+(
+        SELECT t.id, t.[date] AS tsact_date, t.client_id, t.transact_time, t.card_id, t.errors, 
+                        t.merchant_city, c.adjusted_exp_date, 
+                        DATEDIFF(DAY, c.adjusted_exp_date, t.[date]) AS days_since_exp
+        FROM transactions_data t
+        JOIN cards_data c
+        ON t.card_id = c.id AND t.client_id = c.client_id
+        WHERE t.errors = '' AND t.[date] > c.adjusted_exp_date
+       
+)
+        SELECT id, tsact_date, client_id, transact_time, card_id,
+                errors, adjusted_exp_date
+                ,days_since_exp
+        FROM fraud_cte
+        WHERE days_since_exp > 30
 
-SELECT t.id, t.[date], t.client_id, t.card_id, t.errors, t.merchant_city, c.adjusted_exp_date
-FROM transactions_data t
-JOIN cards_data c
-ON t.card_id = c.id AND t.client_id = c.client_id
-WHERE t.errors != '' AND t.[date] <= c.adjusted_exp_date
-ORDER BY t.client_id, t.[date]
+------------------------------------------------------------------------------------------------------
 
-SELECT t.id, t.[date], t.client_id, t.card_id, t.errors, t.merchant_city, c.adjusted_exp_date
-FROM transactions_data t
-JOIN cards_data c
-ON t.card_id = c.id AND t.client_id = c.client_id
-WHERE t.errors != '' 
-ORDER BY t.client_id, t.[date]
 
-SELECT t.id, t.[date], t.client_id, t.card_id, t.errors, t.merchant_city
-FROM transactions_data t
-WHERE t.errors != '' 
-ORDER BY t.client_id, t.[date]
+WITH fraud_cte
+AS 
+(
+        SELECT t.id, t.[date] AS tsact_date, t.client_id, t.transact_time, t.card_id, t.errors, 
+                        t.merchant_city, c.adjusted_exp_date, 
+                        DATEDIFF(DAY, c.adjusted_exp_date, t.[date]) AS days_since_exp
+        FROM transactions_data t
+        JOIN cards_data c
+        ON t.card_id = c.id AND t.client_id = c.client_id
+        WHERE t.[date] > c.adjusted_exp_date
+       
+)
+        SELECT id, tsact_date, client_id, transact_time, card_id,
+                errors, adjusted_exp_date
+                ,days_since_exp
+        FROM fraud_cte
+        WHERE days_since_exp > 30
+
 --Fraud detection (indicators for fraudulent transactions etc)
 --identify high value transactions for potential fraud
 
