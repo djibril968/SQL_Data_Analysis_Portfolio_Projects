@@ -1362,8 +1362,70 @@ WHERE id IN
                         WHERE sub.days_since_exp > 30
                 )
 
--------------------------------------------------------------------------------------------------------
+----fraud by merchants
 
+SELECT merchant_id, COUNT (*) fraud_tsact
+FROM  transactions_data tt
+WHERE id IN
+                (
+                        SELECT sub.id
+                        FROM
+                        (
+                                SELECT t.id, t.[date] AS tsact_date, t.client_id, merchant_id, t.transact_time, t.card_id, t.errors, 
+                                                t.merchant_city, c.adjusted_exp_date, 
+                                        DATEDIFF(DAY, c.adjusted_exp_date, t.[date]) AS days_since_exp
+                                FROM transactions_data t
+                                JOIN cards_data c
+                                ON t.card_id = c.id AND t.client_id = c.client_id
+                                WHERE t.[date] > c.adjusted_exp_date
+                        ) sub
+                        WHERE sub.days_since_exp > 30
+                )
+GROUP BY merchant_id
+ORDER BY 2 DESC;
+
+---fraudulent transaaction by location
+SELECT merchant_state, COUNT (*) fraud_tsact
+FROM  transactions_data tt
+WHERE id IN
+                (
+                        SELECT sub.id
+                        FROM
+                        (
+                                SELECT t.id, t.[date] AS tsact_date, t.client_id, merchant_id, t.transact_time, t.card_id, t.errors, 
+                                                t.merchant_city, c.adjusted_exp_date, 
+                                        DATEDIFF(DAY, c.adjusted_exp_date, t.[date]) AS days_since_exp
+                                FROM transactions_data t
+                                JOIN cards_data c
+                                ON t.card_id = c.id AND t.client_id = c.client_id
+                                WHERE t.[date] > c.adjusted_exp_date
+                        ) sub
+                        WHERE sub.days_since_exp > 30
+                )
+GROUP BY merchant_state
+ORDER BY 2 DESC;
+
+------fraud across age group, lifestage and debt_cat
+
+SELECT age_cat, COUNT (*) fraud_tsact
+FROM
+        (
+                SELECT t.id, t.[date] AS tsact_date, t.client_id, u.age_cat, 
+                        t.transact_time, t.card_id, t.errors, c.adjusted_exp_date, 
+                        DATEDIFF(DAY, c.adjusted_exp_date, t.[date]) AS days_since_exp
+                FROM transactions_data t
+                JOIN cards_data c
+                ON t.card_id = c.id AND t.client_id = c.client_id
+                JOIN users_data u
+                ON t.client_id = u.id AND u.id = c.client_id
+                WHERE t.[date] > c.adjusted_exp_date
+        ) sub
+WHERE sub.days_since_exp > 30
+GROUP BY age_cat
+ORDER BY 2 DESC;
+
+-------------------------------------------------------------------------------------------------------
+---now we narrow this transactions to cus_seg, merchant, channel, state, card type, clients
 WITH fraud_cte
 AS 
 (
@@ -1414,34 +1476,7 @@ WHERE t.errors = 'Bad Expiration'
 ORDER BY t.client_id, t.[date]
 
 
-----to detect fradulent transactions we shall come up with some assumptions
----we look into the transaction date and the expiration date of the user card
 
-
-SELECT t.id, t.[date], t.client_id, t.card_id, t.errors, t.merchant_city, c.expires
-FROM transactions_data t
-JOIN cards_data c
-ON t.card_id = c.id AND t.client_id = c.client_id
-WHERE t.errors = ''
-ORDER BY t.client_id, t.[date]
-
-SELECT *
-FROM cards_data
-WHERE errors = 'Bad Expiration'
-
-SELECT errors, COUNT(errors) AS err_cnt
-FROM transactions_data
-WHERE errors != ''
-GROUP BY errors
-ORDER BY 2 DESC
-
-SELECT * FROM cards_data
-
-
-
-
-
-SELECT * FROM mcc_codes
 ---Channel used
 
 ---transaction footprint for each customer
