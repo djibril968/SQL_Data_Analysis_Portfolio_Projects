@@ -1443,6 +1443,25 @@ WHERE sub.days_since_exp > 30
 GROUP BY lifestage
 ORDER BY 2 DESC;
 
+--------------------------------------------------------------------------------------------------------
+
+SELECT age_cat, COUNT (*) fraud_tsact
+FROM
+        (
+                SELECT t.id, t.[date] AS tsact_date, t.client_id, u.age_cat, 
+                        t.transact_time, t.card_id, t.errors, c.adjusted_exp_date, 
+                        DATEDIFF(DAY, c.adjusted_exp_date, t.[date]) AS days_since_exp
+                FROM transactions_data t
+                JOIN cards_data c
+                ON t.card_id = c.id AND t.client_id = c.client_id
+                JOIN users_data u
+                ON t.client_id = u.id AND u.id = c.client_id
+                WHERE t.[date] > c.adjusted_exp_date
+        ) sub
+WHERE sub.days_since_exp > 30
+GROUP BY age_cat
+ORDER BY 2 DESC;
+
 -------------------------------------------------------------------------------------------------------
 ---now we narrow this transactions to cus_seg, merchant, channel, state, card type, clients
 WITH fraud_cte
