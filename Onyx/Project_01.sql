@@ -1384,6 +1384,10 @@ WHERE id IN
 GROUP BY merchant_id
 ORDER BY 2 DESC;
 
+
+--------card types
+
+
 ---fraudulent transaaction by location
 SELECT merchant_state, COUNT (*) fraud_tsact
 FROM  transactions_data tt
@@ -1445,10 +1449,12 @@ ORDER BY 2 DESC;
 
 --------------------------------------------------------------------------------------------------------
 
-SELECT age_cat, COUNT (*) fraud_tsact
+------card type and brand
+
+SELECT card_type, COUNT (*) fraud_tsact
 FROM
         (
-                SELECT t.id, t.[date] AS tsact_date, t.client_id, u.age_cat, 
+                SELECT t.id, t.[date] AS tsact_date, t.client_id, c.card_type, 
                         t.transact_time, t.card_id, t.errors, c.adjusted_exp_date, 
                         DATEDIFF(DAY, c.adjusted_exp_date, t.[date]) AS days_since_exp
                 FROM transactions_data t
@@ -1459,8 +1465,28 @@ FROM
                 WHERE t.[date] > c.adjusted_exp_date
         ) sub
 WHERE sub.days_since_exp > 30
-GROUP BY age_cat
+GROUP BY card_type
 ORDER BY 2 DESC;
+
+
+SELECT card_brand, COUNT (*) fraud_tsact
+FROM
+        (
+                SELECT t.id, t.[date] AS tsact_date, t.client_id, c.card_brand, 
+                        t.transact_time, t.card_id, t.errors, c.adjusted_exp_date, 
+                        DATEDIFF(DAY, c.adjusted_exp_date, t.[date]) AS days_since_exp
+                FROM transactions_data t
+                JOIN cards_data c
+                ON t.card_id = c.id AND t.client_id = c.client_id
+                JOIN users_data u
+                ON t.client_id = u.id AND u.id = c.client_id
+                WHERE t.[date] > c.adjusted_exp_date
+        ) sub
+WHERE sub.days_since_exp > 30
+GROUP BY card_brand
+ORDER BY 2 DESC;
+
+
 
 -------------------------------------------------------------------------------------------------------
 ---now we narrow this transactions to cus_seg, merchant, channel, state, card type, clients
