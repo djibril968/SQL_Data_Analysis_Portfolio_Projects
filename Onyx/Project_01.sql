@@ -1553,7 +1553,14 @@ total debt across all customer segments)
 predict risk of default
 */
 
-SELECT * FROM users_data
+---total debt
+SELECT ROUND(SUM(total_debt),2) AS tot_debt
+FROM users_data
+
+
+
+
+
 
 SELECT CAST(u.id AS INT) AS client_id, u.yearly_income, u.credit_score, u.total_debt, u.num_credit_cards, c.credit_limit 
 FROM users_data u
