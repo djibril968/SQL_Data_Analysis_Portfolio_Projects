@@ -1511,6 +1511,25 @@ AS
 --Fraud detection (indicators for fraudulent transactions etc)
 --identify high value transactions for potential fraud
 
+SELECT COUNT (*) fraud_tsact, ROUND(SUM(amount),2) AS tsact_size, (SELECT ROUND(SUM(amount),2) FROM transactions_data) AS tot_rev
+                ,ROUND(SUM(amount)/(SELECT SUM(amount) FROM transactions_data)*100, 2) AS percent_loss
+FROM  transactions_data tt
+WHERE id IN
+                (
+                        SELECT sub.id
+                        FROM
+                        (
+                                SELECT t.id, t.[date] AS tsact_date, t.client_id, t.transact_time, t.card_id, t.errors, t.amount, 
+                                                t.merchant_city, c.adjusted_exp_date, 
+                                        DATEDIFF(DAY, c.adjusted_exp_date, t.[date]) AS days_since_exp
+                                FROM transactions_data t
+                                JOIN cards_data c
+                                ON t.card_id = c.id AND t.client_id = c.client_id
+                                WHERE t.[date] > c.adjusted_exp_date
+                        ) sub
+                        WHERE sub.days_since_exp > 30
+                )
+
 
 /*PART B 4
 
@@ -1520,27 +1539,3 @@ predict risk of default
 
 
 
-Indepth spending patterns. regions prone to failed transactions and fraud
-*/
-
-SELECT *
-FROM transactions_data
-WHERE amount LIKE '%-%' AND errors = '';
----atv_channel
-
-SELECT *
-FROM transactions_data
-WHERE errors = 'Bad Expiration'
-
-SELECT t.id, t.[date], t.client_id, t.card_id, t.errors, t.merchant_city, c.expires
-FROM transactions_data t
-JOIN cards_data c
-ON t.card_id = c.id AND t.client_id = c.client_id
-WHERE t.errors = 'Bad Expiration'
-ORDER BY t.client_id, t.[date]
-
-
-
----Channel used
-
----transaction footprint for each customer
