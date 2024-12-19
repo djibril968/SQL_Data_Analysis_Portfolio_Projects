@@ -1531,11 +1531,32 @@ WHERE id IN
                 )
 
 
+-----------------------------------------
+
+SELECT *
+FROM
+        (
+          SELECT t.id, t.[date] AS tsact_date, t.client_id, t.transact_time, t.card_id, t.errors, t.amount, 
+                 t.merchant_city, c.adjusted_exp_date, 
+                 DATEDIFF(DAY, c.adjusted_exp_date, t.[date]) AS days_since_exp
+          FROM transactions_data t
+          JOIN cards_data c
+          ON t.card_id = c.id AND t.client_id = c.client_id
+          WHERE t.[date] > c.adjusted_exp_date
+        ) sub
+WHERE sub.days_since_exp > 30
+ORDER BY amount DESC
 /*PART B 4
 
 Risk analysis (identify customers with high financial risk, utilize debt, card limit, income-cat, credit score,
 total debt across all customer segments)
 predict risk of default
+*/
 
+SELECT * FROM users_data
 
-
+SELECT CAST(u.id AS INT) AS client_id, u.yearly_income, u.credit_score, u.total_debt, u.num_credit_cards, c.credit_limit 
+FROM users_data u
+JOIN cards_data c
+ON u.id = c.client_id
+ORDER BY 1
